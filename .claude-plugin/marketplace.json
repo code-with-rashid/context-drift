@@ -1,0 +1,8 @@
+{
+  "name": "context-drift",
+  "description": "Agent instruction file checker as a portable Agent Skill: every command, path and version in AGENTS.md, CLAUDE.md and friends, verified against the repo.",
+  "owner": { "name": "Rashid Mahmood" },
+  "plugins": [
+    { "name": "context-drift", "source": "./skills/context-drift" }
+  ]
+}
