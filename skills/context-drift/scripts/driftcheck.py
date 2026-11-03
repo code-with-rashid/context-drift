@@ -36,13 +36,17 @@ SKIP_DIRS = {
 
 # name -> tools that read it (for the report). Matched on the path relative to root.
 CONTEXT_PATTERNS = [
-    ("AGENTS.md", "codex, cursor, copilot, claude (if no CLAUDE.md), gemini (if configured)"),
+    (".agents/AGENTS.md", "antigravity"),
+    (".agents/GEMINI.md", "antigravity"),
+    (".agents/rules/*.md", "antigravity"),
+    (".agent/rules/*.md", "antigravity (legacy folder)"),
+    ("AGENTS.md", "codex, cursor, copilot, antigravity, claude (if no CLAUDE.md), gemini (if configured)"),
     ("AGENTS.override.md", "codex"),
     ("CLAUDE.md", "claude, copilot (root only)"),
     ("CLAUDE.local.md", "claude"),
     (".claude/CLAUDE.md", "claude"),
     (".claude/rules/*.md", "claude"),
-    ("GEMINI.md", "gemini, copilot (root only)"),
+    ("GEMINI.md", "gemini, antigravity, copilot (root only)"),
     (".github/copilot-instructions.md", "copilot"),
     (".github/instructions/*", "copilot"),
     (".cursor/rules/*", "cursor"),
@@ -712,8 +716,29 @@ def loading_findings(repo, files):
         settings = read_text(os.path.join(repo.root, ".gemini", "settings.json")) or ""
         if "AGENTS.md" not in settings:
             out.append({"file": "AGENTS.md", "line": 0, "status": "not-loaded-info",
-                        "detail": "Gemini CLI reads GEMINI.md by default; it reads AGENTS.md only if .gemini/settings.json lists it in context.fileName"})
+                        "detail": "Gemini CLI reads GEMINI.md by default; it reads AGENTS.md only if .gemini/settings.json lists it in context.fileName (Antigravity CLI reads AGENTS.md by default)"})
+    rules_manifest = read_text(os.path.join(repo.root, ".agents", "rules.json")) or ""
     for p in paths:
+        if p.startswith((".agents/rules/", ".agent/rules/")):
+            folder = ".agents/rules/" if p.startswith(".agents/") else ".agent/rules/"
+            if "/" in p[len(folder):] and p[len(folder):] not in rules_manifest:
+                out.append({"file": p, "line": 0, "status": "not-loaded",
+                            "detail": "Antigravity scans %s one level deep; files in subfolders load only when listed in .agents/rules.json" % folder})
+            else:
+                head = (read_text(os.path.join(repo.root, p)) or "")[:600]
+                m = re.match(r"---\s*\n(.*?)\n---", head, re.S)
+                trig = re.search(r"^trigger:\s*['\"]?([A-Za-z_]+)", m.group(1), re.M) if m else None
+                if not trig or trig.group(1) not in ("always_on", "model_decision", "glob", "manual"):
+                    out.append({"file": p, "line": 0, "status": "not-loaded",
+                                "detail": "Antigravity silently discards a rule file without frontmatter trigger: always_on | model_decision | glob | manual (snake_case)"})
+                elif trig.group(1) == "manual":
+                    out.append({"file": p, "line": 0, "status": "not-loaded-info",
+                                "detail": "trigger: manual rules load only when @-mentioned; the Antigravity CLI cannot mention rules"})
+        if os.path.basename(p) in ("AGENTS.md", "GEMINI.md") or p.startswith((".agents/rules/", ".agent/rules/")):
+            size = os.path.getsize(os.path.join(repo.root, p))
+            if size > 24000:
+                out.append({"file": p, "line": 0, "status": "truncated",
+                            "detail": "%d bytes; Antigravity truncates each rule file at 24,000 bytes" % size})
         if p.startswith(".cursor/rules/") and not p.endswith(".mdc"):
             out.append({"file": p, "line": 0, "status": "not-loaded",
                         "detail": "Cursor only reads .mdc files in .cursor/rules/; this file is ignored"})
@@ -732,7 +757,8 @@ def loading_findings(repo, files):
             if n > 200:
                 out.append({"file": p, "line": 0, "status": "too-long",
                             "detail": "%d lines; Claude Code docs recommend under 200 per file" % n})
-    agents = [p for p in paths if os.path.basename(p) in ("AGENTS.md", "AGENTS.override.md")]
+    agents = [p for p in paths if os.path.basename(p) in ("AGENTS.md", "AGENTS.override.md")
+              and not p.startswith(".agents/")]
     for p in agents:
         chain = [q for q in agents if os.path.dirname(q) == "" or p.startswith(os.path.dirname(q) + "/")]
         size = sum(os.path.getsize(os.path.join(repo.root, q)) for q in set(chain))
@@ -744,7 +770,8 @@ def loading_findings(repo, files):
 
 def scope_of(path):
     """Directory a context file governs. Tool-specific folders govern the root."""
-    if path.startswith((".github/", ".cursor/", ".claude/", ".windsurf/", ".clinerules/", ".junie/")):
+    if path.startswith((".github/", ".cursor/", ".claude/", ".windsurf/", ".clinerules/", ".junie/",
+                        ".agents/", ".agent/")):
         return ""
     return os.path.dirname(path)
 

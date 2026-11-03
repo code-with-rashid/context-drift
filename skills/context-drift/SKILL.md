@@ -2,7 +2,7 @@
 name: context-drift
 description: >-
   Check a repo's agent instruction files (AGENTS.md, CLAUDE.md, GEMINI.md,
-  .github/copilot-instructions.md, .cursor/rules, and similar) against the
+  .github/copilot-instructions.md, .cursor/rules, .agents/rules, and similar) against the
   actual code: run the commands they document, find paths, scripts and
   make targets that no longer exist, the wrong package manager or language
   version, files that contradict each other, and files a tool silently never
@@ -15,7 +15,7 @@ description: >-
 license: MIT
 compatibility: Requires Python 3.8+. Runs the project's own documented commands, so their toolchains must be installed to verify them.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
   author: Rashid Mahmood
 ---
 

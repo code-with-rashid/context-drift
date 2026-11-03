@@ -1,7 +1,7 @@
 {
   "name": "context-drift",
   "description": "Checks AGENTS.md, CLAUDE.md, GEMINI.md, Copilot and Cursor rules against the real repo: runs the documented commands, finds stale paths, scripts, package managers and versions, and files a tool never loads, then fixes them.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "author": {
     "name": "Rashid Mahmood"

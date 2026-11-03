@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0 — 2026-11-03
+
+- Antigravity CLI support (it replaced Gemini CLI for unpaid and Google One
+  users in June 2026): `scan` now finds `.agents/AGENTS.md`, `.agents/GEMINI.md`
+  and `.agents/rules/*.md`, flags rule files Antigravity silently drops
+  (missing or camelCase `trigger:`, subfolders not listed in
+  `.agents/rules.json`), `manual` rules the CLI can't load, and files over its
+  24,000-byte limit. AGENTS.md and GEMINI.md are reported as read by Antigravity.
+- `references/harness-files.md` updated with Antigravity's loading rules and
+  `@[label](path)` imports.
+- README: Antigravity CLI install path and `gh skill install`.
+
 ## 0.1.0 — 2026-10-09
 
 First release.

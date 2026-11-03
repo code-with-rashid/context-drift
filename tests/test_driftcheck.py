@@ -190,6 +190,29 @@ class LoadingTest(TempRepo):
         self.assertIn(("AGENTS.md", "truncated"), st)
         self.assertIn(("CLAUDE.md", "too-long"), st)
 
+    def test_antigravity_rules(self):
+        res = self.scan({".agents/rules/ok.md": "---\ntrigger: always_on\n---\nx\n",
+                         ".agents/rules/camel.md": "---\ntrigger: alwaysOn\n---\nx\n",
+                         ".agents/rules/bare.md": "no frontmatter\n",
+                         ".agents/rules/man.md": "---\ntrigger: manual\n---\nx\n",
+                         ".agents/rules/deep/a.md": "---\ntrigger: always_on\n---\nx\n",
+                         ".agents/rules/deep/b.md": "---\ntrigger: always_on\n---\nx\n",
+                         ".agents/rules.json": '{"entries": ["deep/b.md"]}',
+                         ".agents/AGENTS.md": "y" * 25000})
+        st = self.statuses(res)
+        self.assertNotIn((".agents/rules/ok.md", "not-loaded"), st)
+        self.assertIn((".agents/rules/camel.md", "not-loaded"), st)
+        self.assertIn((".agents/rules/bare.md", "not-loaded"), st)
+        self.assertIn((".agents/rules/man.md", "not-loaded-info"), st)
+        self.assertIn((".agents/rules/deep/a.md", "not-loaded"), st)
+        self.assertNotIn((".agents/rules/deep/b.md", "not-loaded"), st)
+        self.assertIn((".agents/AGENTS.md", "truncated"), st)
+        read_by = {f["path"]: f["read_by"] for f in res["context_files"]}
+        self.assertEqual(read_by[".agents/AGENTS.md"], "antigravity")
+        self.assertIn("antigravity", read_by[".agents/rules/ok.md"])
+        # .agents/AGENTS.md is not part of Codex's chain
+        self.assertNotIn("KiB", " ".join(l["detail"] for l in res["loading"] if l["file"] == ".agents/AGENTS.md"))
+
     def test_skips_node_modules(self):
         res = self.scan({"node_modules/x/AGENTS.md": "x", "AGENTS.md": "y"})
         self.assertEqual([f["path"] for f in res["context_files"]], ["AGENTS.md"])

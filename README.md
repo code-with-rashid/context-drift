@@ -102,6 +102,7 @@ Copy the skill folder (not the whole repo) into the skills directory your tool r
 | Codex CLI | `~/.agents/skills/` | `.agents/skills/` |
 | Cursor | `~/.cursor/skills/` or `~/.agents/skills/` | `.cursor/skills/` or `.agents/skills/` |
 | Gemini CLI | `~/.gemini/skills/` or `~/.agents/skills/` | `.gemini/skills/` or `.agents/skills/` |
+| Antigravity CLI | `~/.gemini/skills/` | `.agents/skills/` |
 | GitHub Copilot | `~/.copilot/skills/` or `~/.agents/skills/` | `.github/skills/` or `.agents/skills/` |
 | Claude Code (without the plugin) | `~/.claude/skills/` | `.claude/skills/` |
 
@@ -119,6 +120,8 @@ Copy-Item -Recurse "$env:TEMP\context-drift\skills\context-drift" "$HOME\.agents
 
 Gemini CLI can also install straight from the repo:
 `gemini skills install https://github.com/code-with-rashid/context-drift.git --path skills/context-drift`.
+
+GitHub CLI 2.90+ can install into any of these tools: `gh skill install code-with-rashid/context-drift context-drift --agent <tool> --scope user` (`<tool>` is e.g. `github-copilot`, `codex`, `cursor`, `gemini-cli`, `antigravity-cli`, `claude-code`).
 
 ## Usage
 
